@@ -8,7 +8,7 @@
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #eef2f3; cursor: url('https://cdn-icons-png.flaticon.com/32/1077/1077114.png'), auto; font-family: sans-serif; touch-action: none; }
         #game-container { position: relative; width: 100vw; height: 100vh; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
-        .cat { position: absolute; width: 120px; height: auto; user-select: none; z-index: 10; }
+        .cat { position: absolute; width: 110px; height: auto; user-select: none; z-index: 10; }
         #basket { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 80px; pointer-events: none; }
         .portal-suck { transition: all 0.6s cubic-bezier(0.5, -0.5, 1, 1) !important; left: 50% !important; top: calc(100vh - 80px) !important; transform: translate(-50%, 0) scale(0) rotate(720deg) !important; opacity: 0; }
         .portal-escape { transition: all 0.8s ease-out !important; opacity: 1 !important; transform: scale(1) rotate(-360deg) !important; }
@@ -58,18 +58,19 @@
             this.update();
         }
         resetPosition() {
-            this.x = Math.random() * (window.innerWidth - 120);
+            this.x = Math.random() * (window.innerWidth - 110);
             this.y = Math.random() * (window.innerHeight - 150);
-            this.dx = (Math.random() - 0.5) * 30;
-            this.dy = (Math.random() - 0.5) * 30;
+            // Скорость снижена в 1.5 раза (было 30, стало 20 для начального импульса)
+            this.dx = (Math.random() - 0.5) * 18;
+            this.dy = (Math.random() - 0.5) * 18;
             this.el.style.left = this.x + 'px';
             this.el.style.top = this.y + 'px';
         }
         update() {
             if (this.isCaught) return;
             this.x += this.dx; this.y += this.dy;
-            if (this.x <= 0 || this.x >= window.innerWidth - 120) this.dx *= -1;
-            if (this.y <= 0 || this.y >= window.innerHeight - 120) this.dy *= -1;
+            if (this.x <= 0 || this.x >= window.innerWidth - 110) this.dx *= -1;
+            if (this.y <= 0 || this.y >= window.innerHeight - 110) this.dy *= -1;
             this.el.style.left = this.x + 'px'; this.el.style.top = this.y + 'px';
             requestAnimationFrame(() => this.update());
         }
