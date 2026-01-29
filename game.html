@@ -2,206 +2,109 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Поймай котиков для Мистера Главного Котика</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Cat Catch TMA</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            background: #eef2f3;
-            /* Курсор в форме лапки */
-            cursor: url('https://cdn-icons-png.flaticon.com/32/1077/1077114.png'), auto;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        #game-container {
-            position: relative;
-            width: 100vw;
-            height: 100vh;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-        }
-
-        .cat {
-            position: absolute;
-            width: 150px; 
-            height: auto;
-            user-select: none;
-            z-index: 10;
-        }
-
-        #basket {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 80px;
-            z-index: 5;
-            pointer-events: none;
-        }
-
-        /* Эффект портала */
-        .portal-suck {
-            pointer-events: none;
-            transition: all 0.8s cubic-bezier(0.5, -0.5, 1, 1) !important;
-            left: 50% !important;
-            top: calc(100vh - 80px) !important;
-            transform: translate(-50%, 0) scale(0) rotate(720deg) !important;
-            opacity: 0;
-        }
-
-        /* Уведомление */
-        #notification-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.6);
-            z-index: 100;
-            justify-content: center;
-            align-items: center;
-        }
-
-        #notification {
-            background: white;
-            padding: 40px;
-            border-radius: 25px;
-            text-align: center;
-            max-width: 500px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 5px solid #ff9a9e;
-        }
-
-        #notification h2 {
-            font-size: 22px;
-            line-height: 1.5;
-            color: #333;
-            margin-bottom: 30px;
-        }
-
-        .btn {
-            padding: 12px 25px;
-            font-size: 18px;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            margin: 10px;
-            transition: transform 0.2s, background 0.2s;
-            display: inline-block;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #eef2f3; cursor: url('https://cdn-icons-png.flaticon.com/32/1077/1077114.png'), auto; font-family: sans-serif; touch-action: none; }
+        #game-container { position: relative; width: 100vw; height: 100vh; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
+        .cat { position: absolute; width: 120px; height: auto; user-select: none; z-index: 10; }
+        #basket { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 80px; pointer-events: none; }
+        .portal-suck { transition: all 0.6s cubic-bezier(0.5, -0.5, 1, 1) !important; left: 50% !important; top: calc(100vh - 80px) !important; transform: translate(-50%, 0) scale(0) rotate(720deg) !important; opacity: 0; }
+        .portal-escape { transition: all 0.8s ease-out !important; opacity: 1 !important; transform: scale(1) rotate(-360deg) !important; }
+        #score { position: absolute; top: 20px; right: 20px; font-size: 20px; background: rgba(255,255,255,0.8); padding: 8px 15px; border-radius: 12px; z-index: 20; }
+        #notification-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; }
+        #notification { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 85%; max-width: 400px; border: 4px solid #ff9a9e; }
+        .btn { padding: 12px 20px; font-size: 16px; border: none; border-radius: 12px; cursor: pointer; margin: 8px; font-weight: bold; width: 80%; }
         .btn-main { background: #ff9a9e; color: white; }
         .btn-again { background: #a1c4fd; color: white; }
-        
-        .btn-main:hover { background: #f87a80; transform: scale(1.05); }
-        .btn-again:hover { background: #87b2f8; transform: scale(1.05); }
-
-        #score {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 24px;
-            background: rgba(255,255,255,0.7);
-            padding: 10px 20px;
-            border-radius: 15px;
-            z-index: 20;
-        }
     </style>
 </head>
 <body>
-
 <div id="game-container">
-    <div id="score">Котиков поймано: <span id="count">0</span> / 10</div>
+    <div id="score">🧺 <span id="count">0</span> / 16</div>
     <div id="basket">🧺</div>
 </div>
-
 <div id="notification-overlay">
     <div id="notification">
-        <h2>Мистер главный котик, приглашаем вас в рэсторан, чтобы отметить знаменательную дату Вашего рождения. Veh</h2>
-        <button class="btn btn-main" onclick="alert('Ура, чтобы направиться в ресторан, обратитесь к жене')">Ура</button>
+        <h2 style="font-size: 18px;">Мистер главный котик, приглашаем вас в рэсторан, чтобы отметить знаменательную дату Вашего рождения. Veh</h2>
+        <button class="btn btn-main" id="btn-ura">Ура</button>
         <button class="btn btn-again" onclick="location.reload()">Сыграть еще раз</button>
     </div>
 </div>
-
 <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.ready();
     const container = document.getElementById('game-container');
     const countDisplay = document.getElementById('count');
     const overlay = document.getElementById('notification-overlay');
     let caughtCount = 0;
-
-    const catImages = [
-        'cat1.png', 'cat2.png', 'cat3.png', 'cat4.png', 'cat5.png',
-        'cat6.png', 'cat7.png', 'cat8.png', 'cat9.png', 'cat10.png'
-    ];
+    const totalGoal = 16;
+    const caughtCatsList = [];
+    const baseImages = ['cat1.png', 'cat2.png', 'cat3.png', 'cat4.png', 'cat5.png', 'cat6.png', 'cat7.png', 'cat8.png', 'cat9.png', 'cat10.png'];
+    const finalImages = [...baseImages];
+    for (let i = 0; i < 6; i++) finalImages.push(baseImages[Math.floor(Math.random() * baseImages.length)]);
 
     class Cat {
         constructor(imgSrc) {
             this.el = document.createElement('img');
             this.el.src = imgSrc;
             this.el.className = 'cat';
-            
-            this.el.onload = () => {
-                this.update();
-            };
-
-            // Рандомная начальная позиция
-            this.x = Math.random() * (window.innerWidth - 150);
-            this.y = Math.random() * (window.innerHeight - 150);
-            
-            // СКОРОСТЬ: увеличена до 20 (от -10 до 10 по каждой оси)
-            this.dx = (Math.random() - 0.5) * 20; 
-            this.dy = (Math.random() - 0.5) * 20;
-            
-            this.el.style.left = this.x + 'px';
-            this.el.style.top = this.y + 'px';
-
+            this.isCaught = false;
+            this.resetPosition();
             this.el.onclick = () => this.catch();
             container.appendChild(this.el);
+            this.update();
         }
-
-        update() {
-            if (this.isCaught) return;
-
-            this.x += this.dx;
-            this.y += this.dy;
-
-            // Отскок от краев
-            if (this.x <= 0 || this.x >= window.innerWidth - 150) this.dx *= -1.02; // Небольшое ускорение при ударе
-            if (this.y <= 0 || this.y >= window.innerHeight - 150) this.dy *= -1.02;
-
-            // Ограничение максимальной скорости, чтобы не улетели в космос
-            const maxSpeed = 25;
-            if (Math.abs(this.dx) > maxSpeed) this.dx = Math.sign(this.dx) * maxSpeed;
-            if (Math.abs(this.dy) > maxSpeed) this.dy = Math.sign(this.dy) * maxSpeed;
-
+        resetPosition() {
+            this.x = Math.random() * (window.innerWidth - 120);
+            this.y = Math.random() * (window.innerHeight - 150);
+            this.dx = (Math.random() - 0.5) * 30;
+            this.dy = (Math.random() - 0.5) * 30;
             this.el.style.left = this.x + 'px';
             this.el.style.top = this.y + 'px';
-
+        }
+        update() {
+            if (this.isCaught) return;
+            this.x += this.dx; this.y += this.dy;
+            if (this.x <= 0 || this.x >= window.innerWidth - 120) this.dx *= -1;
+            if (this.y <= 0 || this.y >= window.innerHeight - 120) this.dy *= -1;
+            this.el.style.left = this.x + 'px'; this.el.style.top = this.y + 'px';
             requestAnimationFrame(() => this.update());
         }
-
         catch() {
             if (this.isCaught) return;
             this.isCaught = true;
             caughtCount++;
             countDisplay.innerText = caughtCount;
-            
+            caughtCatsList.push(this);
             this.el.classList.add('portal-suck');
-            
-            setTimeout(() => {
-                this.el.remove();
-                if (caughtCount === 10) {
-                    overlay.style.display = 'flex';
-                }
-            }, 800);
+            if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+            if (caughtCount === totalGoal) setTimeout(() => { overlay.style.display = 'flex'; }, 800);
+        }
+        escape() {
+            if (!this.isCaught || caughtCount === totalGoal) return;
+            this.isCaught = false;
+            caughtCount--;
+            countDisplay.innerText = caughtCount;
+            this.el.classList.remove('portal-suck');
+            this.el.classList.add('portal-escape');
+            this.resetPosition();
+            setTimeout(() => { this.el.classList.remove('portal-escape'); this.update(); }, 800);
         }
     }
-
-    catImages.forEach(src => new Cat(src));
+    finalImages.forEach(src => new Cat(src));
+    setInterval(() => {
+        if (caughtCatsList.length > 0 && caughtCount < totalGoal) {
+            const randomIndex = Math.floor(Math.random() * caughtCatsList.length);
+            const escapingCat = caughtCatsList.splice(randomIndex, 1)[0];
+            escapingCat.escape();
+        }
+    }, 15000);
+    document.getElementById('btn-ura').onclick = () => {
+        tg.showAlert('Ура, чтобы направиться в ресторан, обратитесь к жене', () => { tg.close(); });
+    };
 </script>
-
 </body>
 </html>
