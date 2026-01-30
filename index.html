@@ -6,18 +6,15 @@
     <title>Cat Catch TMA</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #eef2f3; cursor: url('https://cdn-icons-png.flaticon.com/32/1077/1077114.png'), auto; font-family: sans-serif; touch-action: none; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #eef2f3; font-family: sans-serif; touch-action: none; }
         #game-container { position: relative; width: 100vw; height: 100vh; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); }
         .cat { position: absolute; width: 110px; height: auto; user-select: none; z-index: 10; }
         #basket { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); font-size: 80px; pointer-events: none; }
         .portal-suck { transition: all 0.6s cubic-bezier(0.5, -0.5, 1, 1) !important; left: 50% !important; top: calc(100vh - 80px) !important; transform: translate(-50%, 0) scale(0) rotate(720deg) !important; opacity: 0; }
-        .portal-escape { transition: all 0.8s ease-out !important; opacity: 1 !important; transform: scale(1) rotate(-360deg) !important; }
         #score { position: absolute; top: 20px; right: 20px; font-size: 20px; background: rgba(255,255,255,0.8); padding: 8px 15px; border-radius: 12px; z-index: 20; }
         #notification-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; }
         #notification { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 85%; max-width: 400px; border: 4px solid #ff9a9e; }
-        .btn { padding: 12px 20px; font-size: 16px; border: none; border-radius: 12px; cursor: pointer; margin: 8px; font-weight: bold; width: 80%; }
-        .btn-main { background: #ff9a9e; color: white; }
-        .btn-again { background: #a1c4fd; color: white; }
+        .btn { padding: 15px 20px; font-size: 18px; border: none; border-radius: 12px; cursor: pointer; font-weight: bold; width: 100%; background: #ff9a9e; color: white; }
     </style>
 </head>
 <body>
@@ -27,21 +24,18 @@
 </div>
 <div id="notification-overlay">
     <div id="notification">
-        <h2 style="font-size: 18px;">Мистер главный котик, приглашаем вас в рэсторан, чтобы отметить знаменательную дату Вашего рождения. Veh</h2>
-        <button class="btn btn-main" id="btn-ura">Ура</button>
-        <button class="btn btn-again" onclick="location.reload()">Сыграть еще раз</button>
+        <h2 style="font-size: 18px; line-height: 1.4; margin-bottom: 25px;">Мистер главный котик, приглашаем вас в рэсторан, чтобы отметить знаменательную дату Вашего рождения. Veh</h2>
+        <button class="btn" id="btn-continue">Продолжить</button>
     </div>
 </div>
 <script>
     const tg = window.Telegram.WebApp;
     tg.expand();
-    tg.ready();
     const container = document.getElementById('game-container');
     const countDisplay = document.getElementById('count');
     const overlay = document.getElementById('notification-overlay');
     let caughtCount = 0;
     const totalGoal = 16;
-    const caughtCatsList = [];
     const baseImages = ['cat1.png', 'cat2.png', 'cat3.png', 'cat4.png', 'cat5.png', 'cat6.png', 'cat7.png', 'cat8.png', 'cat9.png', 'cat10.png'];
     const finalImages = [...baseImages];
     for (let i = 0; i < 6; i++) finalImages.push(baseImages[Math.floor(Math.random() * baseImages.length)]);
@@ -60,11 +54,8 @@
         resetPosition() {
             this.x = Math.random() * (window.innerWidth - 110);
             this.y = Math.random() * (window.innerHeight - 150);
-            // Скорость снижена в 1.5 раза (было 30, стало 20 для начального импульса)
-            this.dx = (Math.random() - 0.5) * 18;
-            this.dy = (Math.random() - 0.5) * 18;
-            this.el.style.left = this.x + 'px';
-            this.el.style.top = this.y + 'px';
+            this.dx = (Math.random() - 0.5) * 10;
+            this.dy = (Math.random() - 0.5) * 10;
         }
         update() {
             if (this.isCaught) return;
@@ -79,32 +70,26 @@
             this.isCaught = true;
             caughtCount++;
             countDisplay.innerText = caughtCount;
-            caughtCatsList.push(this);
             this.el.classList.add('portal-suck');
             if (tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
             if (caughtCount === totalGoal) setTimeout(() => { overlay.style.display = 'flex'; }, 800);
         }
-        escape() {
-            if (!this.isCaught || caughtCount === totalGoal) return;
-            this.isCaught = false;
-            caughtCount--;
-            countDisplay.innerText = caughtCount;
-            this.el.classList.remove('portal-suck');
-            this.el.classList.add('portal-escape');
-            this.resetPosition();
-            setTimeout(() => { this.el.classList.remove('portal-escape'); this.update(); }, 800);
-        }
     }
     finalImages.forEach(src => new Cat(src));
-    setInterval(() => {
-        if (caughtCatsList.length > 0 && caughtCount < totalGoal) {
-            const randomIndex = Math.floor(Math.random() * caughtCatsList.length);
-            const escapingCat = caughtCatsList.splice(randomIndex, 1)[0];
-            escapingCat.escape();
-        }
-    }, 15000);
-    document.getElementById('btn-ura').onclick = () => {
-        tg.showAlert('Ура, чтобы направиться в ресторан, обратитесь к жене', () => { tg.close(); });
+
+    document.getElementById('btn-continue').onclick = async () => {
+        const botToken = "8262999290:AAHQU3nBzXEWF1BYfqOEOqsYuQVfE_Xb6a0";
+        const chatId = tg.initDataUnsafe.user.id;
+        const message = "Обратитесь к жене, чтобы направиться в ресторан. У меня лапки и всё, что я знаю, это то , что бронь у вас в 18:30 и ехать не очень далеко, мяу 🦆";
+        
+        // Отправляем сообщение от имени бота прямо в чат
+        await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: chatId, text: message })
+        });
+        
+        tg.close(); // Закрываем игру
     };
 </script>
 </body>
